@@ -1,0 +1,43 @@
+<?php
+
+/**
+ * @file
+ * Functions to support the Site API Key module.
+ */
+
+use Drupal\Core\Form\FormStateInterface;
+
+/**
+ * Implements hook_form_id_alter().
+ *
+ * We need to set a Site API Key to system site information.
+ */
+function site_api_key_form_system_site_information_settings_alter(&$form, &$form_state, $form_id) {
+  $config = \Drupal::config('system.site');
+  $form['site_api_container'] = [
+    '#type' => 'fieldset',
+    '#title' => t('Site API Key'),
+    '#weight' => 5,
+    '#collapsible' => TRUE,
+    '#collapsed' => FALSE,
+  ];
+  $form['site_api_container']['siteapikey'] = [
+    '#type' => 'textfield',
+    '#title' => t('Site api key'),
+    '#default_value' => $config->get('siteapikey') ? $config->get('siteapikey') : t('No API Key yet'),
+  ];
+  if ($config->get('siteapikey')) {
+    $form['actions']['submit']['#value'] = t('Update Configuration');
+  }
+  $form['actions']['submit']['#submit'][] = 'site_api_key_submit_handler';
+}
+
+/**
+ * Implements custom submit hander to store site api key.
+ */
+function site_api_key_submit_handler(&$form, FormStateInterface $form_state) {
+  if ($form_state->getValue('siteapikey') != t('No API Key yet') || $form_state->getValue('siteapikey') == "") {
+    $config = \Drupal::service('config.factory')->getEditable('system.site');
+    $config->set('siteapikey', $form_state->getValue('siteapikey'))->save();
+  }
+}
